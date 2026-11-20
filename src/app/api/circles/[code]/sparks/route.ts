@@ -32,7 +32,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ code: string }
     args: [newId(), code, me.id, to, info.kind, text, Date.now()],
   });
   after(() =>
-    notifyMembers([to], { title: `${info.emoji} ${me.name} tossed you a spark`, body: text, url: `/c/${code}`, tag: `spark-${code}` }).catch(() => {}),
+    notifyMembers([to], { title: `${info.emoji} ${me.name} tossed you a spark`, body: text, url: `/c/${code}`, tag: `spark-${code}` }).catch((e) => console.warn("push: spark notification failed", e)),
   );
   return NextResponse.json({ ok: true });
 }

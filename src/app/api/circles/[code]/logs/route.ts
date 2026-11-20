@@ -27,7 +27,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ code: string }
   });
   // A heavy day (newly logged, not an edit of one) lets friends know they could bring a blanket.
   if (mood === "heavy" && before.rows[0]?.mood !== "heavy") {
-    after(async () => {
+    after(() => notifyBlanket().catch((e) => console.warn("push: blanket notification failed", e)));
+    const notifyBlanket = async () => {
       const others = await c.execute({ sql: "SELECT id FROM members WHERE circle = ? AND id != ?", args: [code, me.id] });
       const n = needInfo(need);
       await notifyMembers(others.rows.map((r) => String(r.id)), {
@@ -36,7 +37,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ code: string }
         url: `/c/${code}`,
         tag: `blanket-${code}-${me.id}`,
       });
-    });
+    };
   }
   return NextResponse.json({ ok: true });
 }

@@ -1,5 +1,9 @@
 import "server-only";
-import webpush from "web-push";
+import * as webpushModule from "web-push";
+
+// web-push is CommonJS and kept external, so depending on how it's loaded the functions sit
+// on the module itself or on .default. Use whichever exists.
+const webpush = ((webpushModule as { default?: typeof webpushModule }).default ?? webpushModule) as typeof webpushModule;
 import { db } from "./db";
 
 // Web push: a spark or a friend's heavy day reaches you even when Kindling is closed.
