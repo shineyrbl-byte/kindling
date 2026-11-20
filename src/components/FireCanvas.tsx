@@ -118,25 +118,27 @@ export default function FireCanvas({ warmth, stars, fireX = 0.5, fireY = 0.62, s
       ctx.fillStyle = `rgba(255,90,30,${0.35 + 0.4 * w})`;
       ctx.beginPath(); ctx.ellipse(cx, base + 2, 26 * k, 6 * k, 0, 0, 6.28); ctx.fill();
 
-      // Flames
-      const spawn = (reduced ? 1 : 2) * (1 + 7 * w);
-      for (let i = 0; i < spawn && flames.length < 500; i++) {
-        const spread = (8 + 26 * w) * k;
+      // Flames: many soft, low-alpha puffs. Additive blending makes the overlapping core hot
+      // and the edges orange-red; pulling puffs towards the middle as they rise gives tongues.
+      const spawn = (reduced ? 1.5 : 3) * (1 + 5 * w);
+      for (let i = 0; i < spawn && flames.length < 520; i++) {
+        const spread = (10 + 22 * w) * k;
         flames.push({
-          x: cx + (Math.random() + Math.random() - 1) * spread, y: base - 2,
-          vx: (Math.random() - 0.5) * 0.4, vy: -(0.8 + Math.random() * (1.2 + 2.2 * w)) * k,
-          life: 1, decay: 0.014 + Math.random() * 0.016, r: (7 + 16 * w) * k,
+          x: cx + (Math.random() + Math.random() - 1) * spread, y: base - 4,
+          vx: (Math.random() - 0.5) * 0.5, vy: -(0.8 + Math.random() * (1 + 1.9 * w)) * k,
+          life: 1, decay: 0.016 + Math.random() * 0.02, r: (8 + 15 * w) * k,
         });
       }
       ctx.globalCompositeOperation = "lighter";
+      const sway = reduced ? 0 : Math.sin(frame * 0.045) * 0.06;
       for (let i = flames.length - 1; i >= 0; i--) {
         const p = flames[i];
-        p.vx += (cx - p.x) * 0.0025; p.x += p.vx; p.y += p.vy; p.life -= p.decay;
+        p.vx += (cx - p.x) * 0.006 + sway; p.vx *= 0.96; p.x += p.vx; p.y += p.vy; p.vy *= 0.995; p.life -= p.decay;
         if (p.life <= 0) { flames.splice(i, 1); continue; }
-        const r = p.r * (0.35 + p.life * 0.75);
-        const [cr, cg, cb] = p.life > 0.75 ? [255, 236, 180] : p.life > 0.45 ? [255, 160, 55] : [235, 70, 30];
+        const r = p.r * (0.3 + p.life * 0.9);
+        const [cr, cg, cb] = p.life > 0.82 ? [255, 214, 140] : p.life > 0.55 ? [255, 140, 40] : p.life > 0.3 ? [235, 80, 25] : [150, 40, 30];
         const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, r);
-        grad.addColorStop(0, `rgba(${cr},${cg},${cb},${0.5 * p.life})`);
+        grad.addColorStop(0, `rgba(${cr},${cg},${cb},${0.2 * p.life + 0.04})`);
         grad.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
         ctx.fillStyle = grad;
         ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, 6.28); ctx.fill();

@@ -30,7 +30,7 @@ export default function Landing() {
   return (
     <main className="landing">
       <section className="hero">
-        <div className="hero-fire"><FireCanvas warmth={0.85} stars={28} fireY={0.78} /></div>
+        <div className="hero-fire"><FireCanvas warmth={0.85} stars={28} fireY={0.86} /></div>
         <div className="hero-copy">
           <p className="brand big">🔥 Kindling</p>
           <h1>Keep your people close.</h1>

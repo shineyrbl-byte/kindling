@@ -3,13 +3,13 @@ import type { Seat } from "@/lib/fire";
 import { MOODS } from "@/lib/catalog";
 
 export const FIRE_X = 0.5;
-export const FIRE_Y = 0.56;
+export const FIRE_Y = 0.6;
 
 /** Where seat i of n sits around the fire, as fractions of the scene. You always sit at the front. */
 export function seatPos(i: number, n: number, narrow: boolean) {
   const a = Math.PI / 2 + (i / n) * Math.PI * 2;
   const rx = narrow ? 0.4 : 0.34;
-  const ry = 0.29;
+  const ry = 0.31;
   return { x: FIRE_X + rx * Math.cos(a), y: FIRE_Y + ry * Math.sin(a) };
 }
 
