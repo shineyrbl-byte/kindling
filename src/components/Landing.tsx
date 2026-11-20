@@ -1,13 +1,19 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import FireCanvas from "./FireCanvas";
-import { api, saveSeat } from "@/lib/client";
+import { api, loadSeats, saveSeat } from "@/lib/client";
 
 export default function Landing() {
   const [busy, setBusy] = useState(false);
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
+  const [mine, setMine] = useState<{ code: string; name: string; demo: boolean }[]>([]);
+
+  // Fires you already have a seat at, on this device
+  useEffect(() => {
+    setMine(Object.entries(loadSeats()).map(([code, s]) => ({ code, name: s.circleName || code, demo: !!s.demoSeats })));
+  }, []);
 
   const demo = async () => {
     setBusy(true);
@@ -48,6 +54,14 @@ export default function Landing() {
             <button className="btn small">Join</button>
           </form>
           {error && <p className="error">{error}</p>}
+          {mine.length > 0 && (
+            <nav className="my-fires" aria-label="Your fires">
+              <span className="small muted">Your fires:</span>
+              {mine.map((f) => (
+                <Link key={f.code} href={`/c/${f.code}`} className="fire-chip">🔥 {f.name}{f.demo ? " (demo)" : ""}</Link>
+              ))}
+            </nav>
+          )}
         </div>
       </section>
 

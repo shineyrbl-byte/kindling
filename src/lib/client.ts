@@ -6,6 +6,7 @@ export interface SavedSeat {
   memberId: string;
   token: string;
   name?: string;
+  circleName?: string;
   demoSeats?: { memberId: string; name: string; token: string }[];
 }
 

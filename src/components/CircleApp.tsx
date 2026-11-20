@@ -7,7 +7,10 @@ import TonightCard from "./TonightCard";
 import MemberSheet from "./MemberSheet";
 import Inbox from "./Inbox";
 import JoinScreen from "./JoinScreen";
-import { DAY, describeFire, nightsKept, nudges, seatFor, warmth, type Mood, type Need, type Seat, type Spark } from "@/lib/fire";
+import NotifyButton from "./NotifyButton";
+import Crackle from "./Crackle";
+import InviteQR from "./InviteQR";
+import { DAY, describeFire, nightsKept, nudges, seatFor, warmth, weekRecap, type Mood, type Need, type Seat, type Spark } from "@/lib/fire";
 import { needInfo, promptFor } from "@/lib/catalog";
 import { api, forgetSeat, loadSeats, saveSeat, timeAgo, today as todayKey, type SavedSeat } from "@/lib/client";
 import type { CircleState } from "@/lib/server";
@@ -78,8 +81,17 @@ export default function CircleApp({ code }: { code: string }) {
       myLog: state.logs.find((l) => l.day === today && l.memberId === state.me) ?? null,
       unseen: state.sparks.filter((s) => s.to === state.me && !s.seenAt),
       prompt: promptFor(code, today),
+      recap: weekRecap(state.members, state.logs, state.sparks, now, today),
     };
   }, [state, today, code]);
+
+  // Remember the fire's name on this device, for "Your fires" on the home page.
+  useEffect(() => {
+    if (state && seat && seat.circleName !== state.circle.name) {
+      const next = { ...seat, circleName: state.circle.name };
+      saveSeat(code, next);
+    }
+  }, [state, seat, code]);
 
   // Sparks that landed while you were away get a moment of their own.
   useEffect(() => {
@@ -177,11 +189,17 @@ export default function CircleApp({ code }: { code: string }) {
       {showInvite && (
         <div className="invite card">
           <p><strong>Invite your people.</strong> Anyone with this link can pull up a seat (up to 12).</p>
-          <div className="row">
-            <code className="invite-url">{inviteUrl}</code>
-            <button className="btn primary small" onClick={invite}>Share link</button>
+          <div className="invite-body">
+            <InviteQR url={inviteUrl} />
+            <div className="grow">
+              <div className="row">
+                <code className="invite-url">{inviteUrl}</code>
+                <button className="btn primary small" onClick={invite}>Share link</button>
+              </div>
+              <p className="small muted">Code: <strong className="code">{code}</strong></p>
+              <p className="small muted">Sitting together? Friends can scan the QR code with their phone camera.</p>
+            </div>
           </div>
-          <p className="small muted">Code: <strong className="code">{code}</strong></p>
         </div>
       )}
 
@@ -191,8 +209,37 @@ export default function CircleApp({ code }: { code: string }) {
 
       <div className="scene">
         <FireCanvas ref={fire} warmth={view.w} stars={nights.totalKept} fireX={FIRE_X} fireY={FIRE_Y} />
+        <Crackle warmth={view.w} />
         <Seats seats={view.seats} me={state.me} today={today} narrow={narrow} onPick={(s: Seat) => setPicked(s.member.id)} />
       </div>
+
+      <NotifyButton key={state.me} code={code} memberId={state.me} token={seat.token} />
+
+      {view.blankets.length > 0 && (
+        <div className="blankets">
+          {view.blankets.map((s) => {
+            const n = needInfo(s.blanket!.need);
+            const done = state.sparks.some((sp) => sp.from === state.me && sp.to === s.member.id && Date.now() - sp.createdAt < 2 * DAY);
+            return (
+              <section key={s.member.id} className="card blanket-card">
+                <h2>🧣 {s.member.name} could use a blanket</h2>
+                <p>
+                  Having a heavy day{n ? <> and <strong>{n.ask}</strong></> : ""}.
+                  {s.lastLog?.note && <span className="quote-inline"> “{s.lastLog.note}”</span>}
+                </p>
+                {done ? (
+                  <p className="muted">✓ You reached out. That matters.</p>
+                ) : (
+                  <button className="btn primary" onClick={() => (n && !n.offer.custom ? sendSpark(s.member.id, n.offer.kind, "").then(() => flash(`${n.offer.emoji} Sent to ${s.member.name}`)) : setPicked(s.member.id))}>
+                    {n ? `${n.offer.emoji} ${n.offer.label}` : "🫶 Reach out"}
+                  </button>
+                )}
+              </section>
+            );
+          })}
+
+        </div>
+      )}
 
       <div className="columns">
         <div className="col">
@@ -225,27 +272,6 @@ export default function CircleApp({ code }: { code: string }) {
         </div>
 
         <div className="col">
-          {view.blankets.map((s) => {
-            const n = needInfo(s.blanket!.need);
-            const done = state.sparks.some((sp) => sp.from === state.me && sp.to === s.member.id && Date.now() - sp.createdAt < 2 * DAY);
-            return (
-              <section key={s.member.id} className="card blanket-card">
-                <h2>🧣 {s.member.name} could use a blanket</h2>
-                <p>
-                  Having a heavy day{n ? <> and <strong>{n.ask}</strong></> : ""}.
-                  {s.lastLog?.note && <span className="quote-inline"> “{s.lastLog.note}”</span>}
-                </p>
-                {done ? (
-                  <p className="muted">✓ You reached out. That matters.</p>
-                ) : (
-                  <button className="btn primary" onClick={() => (n && !n.offer.custom ? sendSpark(s.member.id, n.offer.kind, "").then(() => flash(`${n.offer.emoji} Sent to ${s.member.name}`)) : setPicked(s.member.id))}>
-                    {n ? `${n.offer.emoji} ${n.offer.label}` : "🫶 Reach out"}
-                  </button>
-                )}
-              </section>
-            );
-          })}
-
           <section className="card">
             <h2>Seats cooling</h2>
             {view.quiet.length === 0 ? (
@@ -281,6 +307,27 @@ export default function CircleApp({ code }: { code: string }) {
                 : `${nights.stillNeeded} more log${nights.stillNeeded === 1 ? "" : "s"} tonight keeps the streak going. It belongs to all of you, so nobody gets blamed for breaking it.`}
             </p>
             <p className="muted small">{nights.totalKept} stars in your sky so far.</p>
+          </section>
+
+          <section className="card recap">
+            <h2>📜 This week at the fire</h2>
+            <div className="stats">
+              <div><strong>{view.recap.nights}/7</strong><span>nights kept</span></div>
+              <div><strong>{view.recap.checkIns}</strong><span>check-ins</span></div>
+              <div><strong>{view.recap.sparksTossed}</strong><span>sparks tossed</span></div>
+            </div>
+            {view.recap.comebacks.length > 0 ? (
+              <ul className="comebacks">
+                {view.recap.comebacks.map((c) => (
+                  <li key={c.member.id + c.at}>
+                    🔥 <strong>{c.member.id === state.me ? "You" : c.member.name}</strong> came back after {c.quietDays} quiet days.
+                    {c.sparksWaiting > 0 && <> {c.sparksWaiting} spark{c.sparksWaiting > 1 ? "s were" : " was"} waiting.</>}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="muted small">No comebacks this week. When a quiet friend returns, it&apos;ll show up here.</p>
+            )}
           </section>
         </div>
       </div>
