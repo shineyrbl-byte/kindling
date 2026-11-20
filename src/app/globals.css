@@ -134,7 +134,7 @@ select { width: auto; padding: 0.35em 0.6em; margin: 0; }
 .invite-url { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; background: rgba(0,0,0,0.3); padding: 0.45em 0.7em; border-radius: 10px; font-size: 0.88rem; }
 .code { letter-spacing: 0.15em; color: var(--accent2); }
 
-.scene { -webkit-mask-image: linear-gradient(to bottom, #000 85%, transparent); mask-image: linear-gradient(to bottom, #000 85%, transparent); position: relative; height: clamp(360px, 54vw, 500px); margin: 0 -16px; }
+.scene { position: relative; height: clamp(360px, 54vw, 500px); margin: 0 -16px; }
 .fire-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
 .seat {
