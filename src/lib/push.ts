@@ -23,16 +23,20 @@ export async function notifyMembers(memberIds: string[], msg: PushMessage) {
   if (!memberIds.length || !setup()) return;
   const c = await db();
   const r = await c.execute({ sql: `SELECT endpoint, p256dh, auth FROM push_subs WHERE member IN (${memberIds.map(() => "?").join(",")})`, args: memberIds });
+  let sent = 0;
   await Promise.all(
     r.rows.map(async (row) => {
       const endpoint = String(row.endpoint);
       try {
-        await webpush.sendNotification({ endpoint, keys: { p256dh: String(row.p256dh), auth: String(row.auth) } }, JSON.stringify(msg), { TTL: 60 * 60 * 24 });
+        await webpush.sendNotification({ endpoint, keys: { p256dh: String(row.p256dh), auth: String(row.auth) } }, JSON.stringify(msg), { TTL: 60 * 60 * 24, urgency: "high" });
+        sent++;
       } catch (e) {
         const status = (e as { statusCode?: number }).statusCode;
+        console.warn(`push: failed (${status ?? "no status"})`, (e as Error).message);
         // The browser threw this subscription away: forget it too.
         if (status === 404 || status === 410) await c.execute({ sql: "DELETE FROM push_subs WHERE endpoint = ?", args: [endpoint] });
       }
     }),
   );
+  console.log(`push: "${msg.title}" sent to ${sent} of ${r.rows.length} devices`);
 }
