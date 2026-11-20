@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { err, whoAmI } from "@/lib/server";
 
 // Turn notifications on or off for your seat at this fire, on this device.
+// One device can hold seats at several fires, so a subscription is stored per seat.
 export async function POST(req: Request, ctx: { params: Promise<{ code: string }> }) {
   const code = (await ctx.params).code.toUpperCase();
   const me = await whoAmI(req, code);
@@ -16,7 +17,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ code: string }
   const c = await db();
   await c.execute({
     sql: `INSERT INTO push_subs (endpoint, member, circle, p256dh, auth, created_at) VALUES (?, ?, ?, ?, ?, ?)
-          ON CONFLICT(endpoint) DO UPDATE SET member = excluded.member, circle = excluded.circle, p256dh = excluded.p256dh, auth = excluded.auth`,
+          ON CONFLICT(endpoint, member) DO UPDATE SET circle = excluded.circle, p256dh = excluded.p256dh, auth = excluded.auth`,
     args: [endpoint, me.id, code, sub.keys.p256dh.slice(0, 200), sub.keys.auth.slice(0, 100), Date.now()],
   });
   return NextResponse.json({ ok: true });

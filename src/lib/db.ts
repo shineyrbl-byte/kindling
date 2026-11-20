@@ -46,12 +46,13 @@ const SCHEMA = [
   )`,
   `CREATE INDEX IF NOT EXISTS sparks_circle ON sparks(circle, created_at)`,
   `CREATE TABLE IF NOT EXISTS push_subs (
-    endpoint TEXT PRIMARY KEY,
+    endpoint TEXT NOT NULL,
     member TEXT NOT NULL,
     circle TEXT NOT NULL,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,
-    created_at INTEGER NOT NULL
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (endpoint, member)
   )`,
   `CREATE INDEX IF NOT EXISTS push_member ON push_subs(member)`,
 ];
