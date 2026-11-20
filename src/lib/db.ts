@@ -45,6 +45,15 @@ const SCHEMA = [
     seen_at INTEGER
   )`,
   `CREATE INDEX IF NOT EXISTS sparks_circle ON sparks(circle, created_at)`,
+  `CREATE TABLE IF NOT EXISTS push_subs (
+    endpoint TEXT PRIMARY KEY,
+    member TEXT NOT NULL,
+    circle TEXT NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at INTEGER NOT NULL
+  )`,
+  `CREATE INDEX IF NOT EXISTS push_member ON push_subs(member)`,
 ];
 
 export async function db(): Promise<Client> {

@@ -12,6 +12,7 @@ export async function DELETE(req: Request, ctx: { params: Promise<{ code: string
     [
       { sql: "DELETE FROM logs WHERE member = ?", args: [me.id] },
       { sql: "DELETE FROM sparks WHERE from_member = ? OR to_member = ?", args: [me.id, me.id] },
+      { sql: "DELETE FROM push_subs WHERE member = ?", args: [me.id] },
       { sql: "DELETE FROM members WHERE id = ?", args: [me.id] },
       { sql: "DELETE FROM circles WHERE code = ? AND NOT EXISTS (SELECT 1 FROM members WHERE circle = ?)", args: [code, code] },
     ],

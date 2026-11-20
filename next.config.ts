@@ -6,6 +6,8 @@ const csp = [
   "script-src 'self' 'unsafe-inline'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
+  "worker-src 'self'",
+  "manifest-src 'self'",
   "font-src 'self' data:",
   "connect-src 'self'",
   "object-src 'none'",
@@ -16,8 +18,10 @@ const csp = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["web-push"],
   async headers() {
     return [
+      { source: "/sw.js", headers: [{ key: "Cache-Control", value: "no-cache" }] },
       {
         source: "/:path*",
         headers: [

@@ -66,7 +66,7 @@ export async function POST(req: Request) {
     if (ago % 6 !== 0) log("you", eveningOf(ago), m(0));
     log("sofia", eveningOf(ago) - HOUR, m(1));
     if (ago % 4 !== 1) log("priya", eveningOf(ago) + 30 * 60_000, m(2));
-    if (ago % 5 !== 0) log("arjun", eveningOf(ago) - 2 * HOUR, ago < 3 ? "okay" : m(3));
+    if ((ago >= 11 && ago % 5 !== 0) || ago <= 5) log("arjun", eveningOf(ago) - 2 * HOUR, ago < 3 ? "okay" : m(3), ago === 5 ? "sorry I vanished. thank you for the sparks 🥲" : "");
     if (ago >= 4 && ago % 3 !== 0) log("maya", eveningOf(ago) - 3 * HOUR, ago < 7 ? "heavy" : m(4), ago === 4 ? "so tired lately" : "");
     if (ago >= 8 && ago % 2 === 0) log("leo", eveningOf(ago), m(5), ago === 8 ? "first week at the new school. weird." : "");
   }
@@ -84,6 +84,8 @@ export async function POST(req: Request) {
   spark("sofia", "you", "seat", "Saved your seat by the fire. It's here whenever you are.", now - 5 * HOUR, false);
   spark("priya", "you", "saw", "Saw this and thought of you: the cat that sits on the library steps had KITTENS 😭", now - 2 * HOUR, false);
   spark("sofia", "maya", "thinking", "Thinking of you. No reply needed.", now - 20 * HOUR, false);
+  spark("sofia", "arjun", "seat", "Saved your seat by the fire. It's here whenever you are.", eveningOf(8), true);
+  spark("you", "arjun", "thinking", "Thinking of you. No reply needed.", eveningOf(7), true);
   spark("priya", "leo", "miss", "The fire's not the same without you.", now - 3 * DAY, true);
   spark("you", "leo", "call", "Free for a call this week? Zero pressure.", now - 5 * DAY, true);
 
@@ -94,6 +96,7 @@ export async function POST(req: Request) {
     [
       { sql: "DELETE FROM logs WHERE circle IN (SELECT code FROM circles WHERE demo = 1 AND created_at < ? - 38 * 86400000)", args: [old] },
       { sql: "DELETE FROM sparks WHERE circle IN (SELECT code FROM circles WHERE demo = 1 AND created_at < ? - 38 * 86400000)", args: [old] },
+      { sql: "DELETE FROM push_subs WHERE circle IN (SELECT code FROM circles WHERE demo = 1 AND created_at < ? - 38 * 86400000)", args: [old] },
       { sql: "DELETE FROM members WHERE circle IN (SELECT code FROM circles WHERE demo = 1 AND created_at < ? - 38 * 86400000)", args: [old] },
       { sql: "DELETE FROM circles WHERE demo = 1 AND created_at < ? - 38 * 86400000", args: [old] },
     ],

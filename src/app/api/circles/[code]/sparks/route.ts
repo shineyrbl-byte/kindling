@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import { db } from "@/lib/db";
 import { cleanText, err, newId, whoAmI } from "@/lib/server";
 import { sparkInfo } from "@/lib/catalog";
 import { DAY } from "@/lib/fire";
+import { notifyMembers } from "@/lib/push";
 
 // Toss a spark to a friend.
 export async function POST(req: Request, ctx: { params: Promise<{ code: string }> }) {
@@ -30,5 +31,8 @@ export async function POST(req: Request, ctx: { params: Promise<{ code: string }
     sql: "INSERT INTO sparks (id, circle, from_member, to_member, kind, text, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
     args: [newId(), code, me.id, to, info.kind, text, Date.now()],
   });
+  after(() =>
+    notifyMembers([to], { title: `${info.emoji} ${me.name} tossed you a spark`, body: text, url: `/c/${code}`, tag: `spark-${code}` }).catch(() => {}),
+  );
   return NextResponse.json({ ok: true });
 }
