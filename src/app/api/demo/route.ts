@@ -63,9 +63,9 @@ export async function POST(req: Request) {
   const moods = ["bright", "okay", "okay", "bright", "okay", "heavy", "bright"];
   for (let ago = 21; ago >= 1; ago--) {
     const m = (k: number) => moods[(ago + k) % moods.length];
-    if (ago % 6 !== 0) log("you", eveningOf(ago), m(0));
+    if (ago % 5 !== 3) log("you", eveningOf(ago), m(0));
     log("sofia", eveningOf(ago) - HOUR, m(1));
-    if (ago % 4 !== 1) log("priya", eveningOf(ago) + 30 * 60_000, m(2));
+    if (ago % 6 !== 1) log("priya", eveningOf(ago) + 30 * 60_000, m(2));
     if ((ago >= 11 && ago % 5 !== 0) || ago <= 5) log("arjun", eveningOf(ago) - 2 * HOUR, ago < 3 ? "okay" : m(3), ago === 5 ? "sorry I vanished. thank you for the sparks 🥲" : "");
     if (ago >= 4 && ago % 3 !== 0) log("maya", eveningOf(ago) - 3 * HOUR, ago < 7 ? "heavy" : m(4), ago === 4 ? "so tired lately" : "");
     if (ago >= 8 && ago % 2 === 0) log("leo", eveningOf(ago), m(5), ago === 8 ? "first week at the new school. weird." : "");
