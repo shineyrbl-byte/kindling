@@ -24,6 +24,9 @@ Kindling gives a small friend group (up to 12 people) a shared campfire. Each fr
 - **Quiet seats cool down.** If a friend hasn't checked in for a few days, their seat fades from glowing to cooling to embers. Kindling doesn't guilt the quiet friend. It nudges *everyone else*: "Maya has been quiet for 4 days. No one has reached out yet. Be the first?"
 - **Sparks, no reply needed.** One-tap messages like "Saved your seat by the fire" or "Thinking of you. No reply needed." You can watch the spark fly across the fire to their seat. When they come back they see "While you were away, 2 sparks landed by your seat." You can also send it as a text.
 - **Heavy days, named needs.** When you log a heavy day, Kindling asks what would help: company, not advice / distract me / I'd like to talk / just letting you know. Your friends see a blanket on your seat and a matching button (🪑 Sit with them, 🎈 Send a distraction, 💬 Offer to talk), so nobody has to guess the right thing to say.
+- **This week at the fire.** A weekly recap of nights kept, check-ins and sparks, plus comebacks: "Arjun came back after 6 quiet days. 2 sparks were waiting."
+- **Notifications.** "Notify me" sends a push notification when a spark lands or a friend has a heavy day, even when Kindling is closed. It installs like an app, with no app store.
+- **QR invites and a crackle.** Friends sitting together scan a QR code to join, and there's an optional campfire crackle made with the Web Audio API.
 - **A shared streak.** A night counts as kept when half the group checks in. The streak belongs to everyone, so no single person gets blamed for breaking it. Every kept night adds a star to the sky above your fire.
 
 There's a one-click demo fire ("The Lunch Table") with three weeks of history, so judges can try everything without inviting friends. You can even switch seats and see the fire from the quiet friend's side.
@@ -39,6 +42,7 @@ There's a one-click demo fire ("The Lunch Table") with three weeks of history, s
 - **Making "you've been quiet" feel kind, not guilty.** My first idea was a personal streak, but that punishes the person who's already struggling. Moving the nudge to the *rest of the group* and making the streak shared changed the whole feel of the app.
 - **Making the fire look like fire.** At first it was a white blob, because too many bright particles stacked up. I fixed it by lowering each particle's opacity, adding a red/orange colour fade over its life, and pulling particles towards the middle so they form flame tongues.
 - **Time zones.** "Tonight" means different hours for different friends, so each log stores the writer's local day. The demo builds its history in the visitor's own time zone, so "earlier today" never slips into yesterday.
+- **Notifications that silently failed.** Push looked fine in the browser, but no notification ever arrived. The background send swallowed its errors, so I made it log them. That showed the `web-push` library's default import was `undefined` in production. After fixing it, the logs show "sent to 1 of 1 devices".
 - **A demo that makes sense for any prompt.** The nightly question changes every day, so the demo picks a circle code whose question tonight matches one the demo friends have written answers for.
 
 ## Accomplishments I'm proud of
@@ -53,16 +57,15 @@ There's a one-click demo fire ("The Lunch Table") with three weeks of history, s
 - Deploying a full-stack Next.js app with a hosted SQLite database.
 
 ## What's next for Kindling
-- Optional push notifications when a spark lands or a friend has a heavy day.
 - "Fire for a cause": school clubs and teams using Kindling to check on members after the season ends.
-- Gentle weekly recaps ("Your fire stayed lit 5 nights this week. Leo's seat warmed up again 🔥").
+- A weekly recap notification, so the good news reaches people who don't open the app.
 - More languages, and accessibility testing with screen-reader users.
 
 ## Who it's for
 High school friend groups who are about to drift apart, or already have: friends who moved to different schools, teams after the season ends, cousins in different cities. It works for any small circle that wants to look out for each other.
 
 ## Built with
-nextjs, react, typescript, turso, sqlite, libsql, vercel, canvas, css, node.js, claude
+nextjs, react, typescript, turso, sqlite, libsql, vercel, canvas, web-push, service-worker, pwa, web-audio-api, css, node.js, claude
 
 ## Try it out
 - Live demo: https://kindling-chi-three.vercel.app

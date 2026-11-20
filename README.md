@@ -17,6 +17,10 @@ Kindling gives a small friend group (up to 12) one campfire. Each friend has a s
 | 🌫️ **Quiet seats cool down** | When a friend goes quiet, their seat fades from glowing to cooling to embers. Instead of guilting the quiet friend, the fire nudges *everyone else*: "Maya has been quiet for 4 days. No one has reached out yet. Be the first?" |
 | ✨ **Sparks, no reply needed** | One-tap notes like "Saved your seat by the fire" or "Thinking of you. No reply needed." They fly across the fire to the friend's seat and wait for them: "While you were away, 2 sparks landed by your seat." You can also send them as a text. |
 | 🧣 **Heavy days, named needs** | A heavy log asks what would help: *company, not advice* · *distract me* · *I'd like to talk* · *just letting you know*. Friends get a matching button (🪑 Sit with them, 🎈 Send a distraction, 💬 Offer to talk) so nobody has to guess. |
+| 📜 **This week at the fire** | A weekly recap: nights kept, check-ins, sparks tossed, and comebacks: "Arjun came back after 6 quiet days. 2 sparks were waiting." |
+| 🔔 **Notifications** | Turn on "Notify me" to get a push notification when a spark lands or a friend needs a blanket, even with Kindling closed. Installable as an app (on iPhone: Add to Home Screen). |
+| 🔳 **QR invites** | Sitting at the same lunch table? Friends scan the QR code and pull up a seat in seconds. |
+| 🔈 **Crackle** | An optional campfire sound made entirely with the Web Audio API (no audio files), louder when the fire's bigger. |
 | 🌟 **A shared streak** | A night counts as kept when half the circle logs. The streak belongs to the group, so nobody gets blamed for breaking it. Every kept night adds a star to the sky above your fire. |
 
 The fire's size is the group's warmth: it fades over about a day and a half after each check-in, and sparks add heat too.
@@ -36,6 +40,8 @@ Reaching out keeps the fire going as much as showing up does.
 - **Turso** (hosted SQLite, via `@libsql/client`) in production, a local SQLite file in development.
 - **Canvas 2D particle fire** (`src/components/FireCanvas.tsx`): additive-blended flame puffs pulled towards the centre so they form tongues, drifting embers, one star per kept night, and spark "flights" along a curve to a friend's seat. It respects `prefers-reduced-motion`.
 - **The fire's rules** are pure functions in `src/lib/fire.ts` (seat cooling, warmth, the nights-kept streak, nudges), covered by tests in `tests/fire.test.ts`.
+- **Web Push** (`web-push` + a service worker, VAPID keys in env) for spark and blanket notifications, sent after the response with Next.js `after()`. Off unless `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY` are set.
+- **QR codes** with `qrcode`, generated in the browser.
 - The **demo** (`/api/demo`) makes each visitor a private copy of "The Lunch Table", a fire with three weeks of history. You can switch seats to see it from Maya's or Arjun's side.
 
 ```bash
@@ -45,7 +51,7 @@ npm test           # fire rules
 npm run typecheck
 ```
 
-To deploy, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` (see `.env.example`). Tables are created on first request.
+To deploy, set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN`, plus optional `VAPID_PUBLIC_KEY` and `VAPID_PRIVATE_KEY` for notifications (make them with `npx web-push generate-vapid-keys`). Tables are created on first request.
 
 ## AI use
 
