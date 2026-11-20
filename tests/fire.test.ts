@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DAY, HOUR, dayKey, prevDay, seatFor, warmth, nightsKept, nudges, type Log, type Member } from "../src/lib/fire.ts";
+import { DAY, HOUR, dayKey, prevDay, seatFor, warmth, nightsKept, nudges, weekRecap, type Log, type Member } from "../src/lib/fire.ts";
 import { promptFor, PROMPTS } from "../src/lib/catalog.ts";
 
 const now = Date.UTC(2026, 10, 20, 12);
@@ -74,4 +74,22 @@ test("nudges list quiet friends, quietest first, never yourself", () => {
 test("everyone in a circle gets the same prompt each day", () => {
   assert.equal(promptFor("ABC123", "2026-11-20"), promptFor("ABC123", "2026-11-20"));
   assert.ok(PROMPTS.includes(promptFor("XYZ", "2026-01-01")));
+});
+
+test("week recap counts nights, check-ins, sparks and comebacks", () => {
+  const ms = [m("a"), m("b")];
+  const logs = [log("a", 9 * DAY), log("a", 2 * DAY), log("b", 2 * DAY), log("b", 1 * DAY)];
+  const sparks = [
+    { id: "1", from: "b", to: "a", kind: "thinking", text: "", createdAt: now - 5 * DAY, seenAt: null },
+    { id: "2", from: "b", to: "a", kind: "miss", text: "", createdAt: now - 4 * DAY, seenAt: null },
+    { id: "3", from: "b", to: "a", kind: "miss", text: "", createdAt: now - 1 * DAY, seenAt: null },
+  ];
+  const r = weekRecap(ms, logs, sparks, now, dayKey(now, 0));
+  assert.equal(r.nights, 2); // quorum of 2 friends is 1
+  assert.equal(r.checkIns, 3);
+  assert.equal(r.sparksTossed, 3);
+  assert.equal(r.comebacks.length, 1);
+  assert.equal(r.comebacks[0].member.id, "a");
+  assert.equal(r.comebacks[0].quietDays, 7);
+  assert.equal(r.comebacks[0].sparksWaiting, 2);
 });

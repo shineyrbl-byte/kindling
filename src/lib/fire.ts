@@ -151,3 +151,44 @@ export function describeFire(w: number): string {
   if (w > 0.15) return "The fire is getting low";
   return "Just embers left";
 }
+
+export interface Comeback {
+  member: Member;
+  quietDays: number; // how long they were away
+  sparksWaiting: number; // sparks friends sent them while they were quiet
+  at: number;
+}
+
+/**
+ * The last seven days at the fire: nights kept, check-ins, sparks, and comebacks:
+ * friends who returned after 3+ quiet days, with how many sparks were waiting for them.
+ */
+export function weekRecap(members: Member[], logs: Log[], sparks: Spark[], now: number, today: string) {
+  const days: string[] = [];
+  let d = today;
+  for (let i = 0; i < 7; i++) { days.push(d); d = prevDay(d); }
+  const inWeek = new Set(days);
+  const need = quorum(members.length);
+  const byDay = new Map<string, Set<string>>();
+  for (const l of logs) if (inWeek.has(l.day)) {
+    if (!byDay.has(l.day)) byDay.set(l.day, new Set());
+    byDay.get(l.day)!.add(l.memberId);
+  }
+  const nights = days.filter((x) => (byDay.get(x)?.size ?? 0) >= need).length;
+  const checkIns = logs.filter((l) => inWeek.has(l.day)).length;
+  const weekStart = now - 7 * DAY;
+  const sparksTossed = sparks.filter((s) => s.createdAt > weekStart).length;
+  const comebacks: Comeback[] = [];
+  for (const m of members) {
+    const mine = logs.filter((l) => l.memberId === m.id).sort((a, b) => a.createdAt - b.createdAt);
+    for (let i = 1; i < mine.length; i++) {
+      const gap = mine[i].createdAt - mine[i - 1].createdAt;
+      if (mine[i].createdAt > weekStart && gap >= 3 * DAY) {
+        const waiting = sparks.filter((s) => s.to === m.id && s.createdAt > mine[i - 1].createdAt && s.createdAt < mine[i].createdAt).length;
+        comebacks.push({ member: m, quietDays: Math.floor(gap / DAY), sparksWaiting: waiting, at: mine[i].createdAt });
+      }
+    }
+  }
+  comebacks.sort((a, b) => b.at - a.at);
+  return { nights, checkIns, sparksTossed, comebacks };
+}
